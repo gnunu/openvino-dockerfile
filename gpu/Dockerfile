@@ -30,3 +30,5 @@ RUN useradd -G video -ms /bin/bash ali
 RUN echo ali:123456 | chpasswd
 RUN adduser ali sudo
 USER ali
+ENV LIBVA_DRIVERS_PATH /opt/intel/mediasdk/lib64
+ENV LIBVA_DRIVER_NAME iHD
