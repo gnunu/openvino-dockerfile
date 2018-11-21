@@ -1,0 +1,20 @@
+BUILD
+sudo docker build . -t openvino-gpu-r4 --build-arg HTTP_PROXY=http://10.239.4.80:913 --build-arg HTTPS_PROXY=https://10.239.4.80:913
+
+RUN
+docker run -it --device /dev/dri --device /dev/video0 openvino-gpu-r4
+or
+docker run -it --privileged openvino-gpu-r4
+
+use X
+in docker, add:
+export DISPLAY=<host ip>:{0|1}
+for ex,
+export DISPLAY=10.238.135.69:1
+
+in host, run:
+xhost +
+
+solve opencl:
+in docker,
+export LD_LIBRARY_PATH=/opt/altera/aocl-pro-rte/aclrte-linux64/host/linux64/lib:$LD_LIBRARY_PATH
