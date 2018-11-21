@@ -1,0 +1,5 @@
+BUILD
+sudo docker build . -t openvino-gpu-r4 --build-arg HTTP_PROXY=http://10.239.4.80:913 --build-arg HTTPS_PROXY=https://10.239.4.80:913
+
+RUN
+docker run -it <image_name>
