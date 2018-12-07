@@ -1,8 +1,7 @@
 FROM ubuntu:16.04
 ENV http_proxy $HTTP_PROXY
 ENV https_proxy $HTTPS_PROXY
-#ARG DOWNLOAD_LINK=http://registrationcenter-download.intel.com/akdlm/irc_nas/14919/l_openvino_toolkit_fpga_p_2018.4.420.tgz
-ARG DOWNLOAD_LINK=http://10.238.135.69:8000/l_openvino_toolkit_fpga_p_2018.4.420.tgz
+ARG DOWNLOAD_LINK=http://registrationcenter-download.intel.com/akdlm/irc_nas/14919/l_openvino_toolkit_fpga_p_2018.4.420.tgz
 ARG INSTALL_DIR=/opt/intel/computer_vision_sdk
 ARG TEMP_DIR=/tmp/openvino_installer
 RUN apt-get update && apt-get install -y --no-install-recommends \
@@ -34,6 +33,7 @@ RUN ldconfig
 RUN useradd -G video -ms /bin/bash ali
 RUN echo ali:123456 | chpasswd
 RUN adduser ali sudo
+RUN echo "source $INSTALL_DIR/bin/setupvars.sh" >> /home/ali/.bashrc
 USER ali
 ENV LIBVA_DRIVERS_PATH /opt/intel/mediasdk/lib64
 ENV LIBVA_DRIVER_NAME iHD
