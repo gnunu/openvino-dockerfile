@@ -1,0 +1,21 @@
+BUILD
+sudo docker build . -t openvino-r4-for-gst-build --build-arg HTTP_PROXY=http://10.239.4.101:913 --build-arg HTTPS_PROXY=https://10.239.4.101:913
+
+RUN
+docker run -it --device /dev/dri --device /dev/video0 openvino-gpu-r4
+or
+docker run -it --network=host -e DISPLAY=$DISPLAY -v $XAUTH:/root/.Xauthority -v $VIDEO_EXAMPLES_PATH:/root/video-examples --privileged <openvino-r4-for-gst-build>
+
+use X
+in docker, add:
+export DISPLAY=<host ip>:{0|1}
+for ex,
+export DISPLAY=10.238.135.69:1
+
+in host, run:
+xhost +
+or
+cp ~/.Xauthority /tmp/.Xauthority
+export XAUTH=/tmp/.Xauthority
+xhost local:root
+(use -v $XAUTH:/root/.Xauthority)
