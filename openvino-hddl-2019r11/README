@@ -1,0 +1,21 @@
+BUILD
+sudo docker build . -t openvino-hddl-2019r11
+
+RUN with hddl
+$HDDL_INSTALL_DIR/
+docker run --device=/dev/ion:/dev/ion -v /var/tmp:/var/tmp -ti <image_name>
+or,
+docker run --privileged -v /var/tmp:/var/tmp -ti <image_name>
+
+misc:
+docker run -it --network=host --privileged openvino-gpu-r4
+docker run -it --network=host -e DISPLAY=$DISPLAY -v $XAUTH:/root/.Xauthority -v $VIDEO_EXAMPLES_PATH:/root/video-examples --privileged <image tag>
+
+use X
+in docker, add:
+export DISPLAY=<host ip>:{0|1}
+for ex,
+export DISPLAY=10.238.135.69:1
+
+in host, run:
+xhost +
