@@ -2,7 +2,7 @@ FROM ubuntu:16.04 AS build
 WORKDIR /home
 
 # COMMON BUILD TOOLS
-RUN DEBIAN_FRONTEND=noninteractive apt-get update && apt-get install -y -q --no-install-recommends build-essential autoconf make git wget curl pciutils cpio libtool lsb-release ca-certificates pkg-config bison flex libcurl4-gnutls-dev zlib1g-dev cmake
+RUN DEBIAN_FRONTEND=noninteractive apt-get update && apt-get install -y -q --no-install-recommends build-essential autoconf make git wget curl pciutils cpio libtool lsb-release ca-certificates pkg-config bison flex libcurl4-gnutls-dev zlib1g-dev cmake automake yasm nasm
 
 # install python3.6
 RUN apt-get update && \
@@ -19,6 +19,204 @@ RUN update-alternatives --install /usr/bin/python3 python3 /usr/bin/python3.5 1 
     update-alternatives --install /usr/bin/python3 python3 /usr/bin/python3.6 2 && \
     pip3 uninstall setuptools -y && \
     pip3 install --ignore-installed setuptools==39.1.0 -i  https://mirrors.aliyun.com/pypi/simple/
+
+# Build the gstremaer core
+ARG GST_VER=1.16.0
+ARG GST_REPO=https://gstreamer.freedesktop.org/src/gstreamer/gstreamer-${GST_VER}.tar.xz
+
+RUN  DEBIAN_FRONTEND=noninteractive apt-get update && apt-get install -y -q --no-install-recommends libglib2.0-dev gobject-introspection libgirepository1.0-dev libpango-1.0-0 libpangocairo-1.0-0 autopoint
+RUN  wget -O - ${GST_REPO} | tar xJ && \
+     cd gstreamer-${GST_VER} && \
+     ./autogen.sh \
+        --prefix=/usr \
+        --libdir=/usr/lib/x86_64-linux-gnu \
+        --libexecdir=/usr/lib/x86_64-linux-gnu \
+        --enable-shared \
+        --enable-introspection \
+        --disable-examples  \
+        --disable-gtk-doc && \
+     make -j $(nproc) && \
+     make install DESTDIR=/home/build && \
+     make install;
+
+# Build Oil Runtime Compiler (ORC)
+ARG GST_ORC_VER=0.4.29
+ARG GST_ORC_REPO=https://gstreamer.freedesktop.org/src/orc/orc-${GST_ORC_VER}.tar.xz
+
+RUN  wget -O - ${GST_ORC_REPO} | tar xJ && \
+     cd orc-${GST_ORC_VER} && \
+     ./autogen.sh --prefix=/usr --libdir=/usr/lib/x86_64-linux-gnu \
+                --libexecdir=/usr/lib/x86_64-linux-gnu \
+                --enable-shared \
+                --disable-examples  \
+                --disable-gtk-doc && \
+     make -j $(nproc) && \
+     make install DESTDIR=/home/build && \
+     make install
+
+RUN  apt-get update && apt-get install -y -q --no-install-recommends libxrandr-dev libegl1-mesa-dev autopoint bison flex libudev-dev
+
+# Build the gstremaer plugin base
+ARG GST_PLUGIN_BASE_REPO=https://gstreamer.freedesktop.org/src/gst-plugins-base/gst-plugins-base-${GST_VER}.tar.xz
+
+RUN  DEBIAN_FRONTEND=noninteractive apt-get update && apt-get install -y -q --no-install-recommends libxv-dev libvisual-0.4-dev libtheora-dev libglib2.0-dev libasound2-dev libcdparanoia-dev libgl1-mesa-dev libpango1.0-dev
+
+RUN  wget -O - ${GST_PLUGIN_BASE_REPO} | tar xJ && \
+     cd gst-plugins-base-${GST_VER} && \
+     ./autogen.sh \
+        --prefix=/usr \
+        --libdir=/usr/lib/x86_64-linux-gnu \
+        --libexecdir=/usr/lib/x86_64-linux-gnu \
+        --enable-introspection \
+        --enable-shared \
+        --disable-examples  \
+        --disable-gtk-doc && \
+     make -j $(nproc) && \
+     make install DESTDIR=/home/build && \
+     make install
+
+# Build the gstremaer plugin good set
+ARG GST_PLUGIN_GOOD_REPO=https://gstreamer.freedesktop.org/src/gst-plugins-good/gst-plugins-good-${GST_VER}.tar.xz
+
+RUN  apt-get update && apt-get install -y -q --no-install-recommends libsoup2.4-dev libjpeg-dev
+
+RUN  wget -O - ${GST_PLUGIN_GOOD_REPO} | tar xJ && \
+     cd gst-plugins-good-${GST_VER} && \
+     ./autogen.sh \
+        --prefix=/usr \
+        --libdir=/usr/lib/x86_64-linux-gnu \
+        --libexecdir=/usr/lib/x86_64-linux-gnu \
+        --enable-shared \
+        --disable-examples  \
+        --disable-gtk-doc && \
+     make -j $(nproc) && \
+     make install DESTDIR=/home/build && \
+     make install
+
+# Build the gstremaer plugin bad set
+ARG GST_PLUGIN_BAD_REPO=https://gstreamer.freedesktop.org/src/gst-plugins-bad/gst-plugins-bad-${GST_VER}.tar.xz
+
+RUN  apt-get update && apt-get install -y -q --no-install-recommends libssl-dev
+
+RUN  wget -O - ${GST_PLUGIN_BAD_REPO} | tar xJ && \
+     cd gst-plugins-bad-${GST_VER} && \
+     ./autogen.sh \
+        --prefix=/usr \
+        --libdir=/usr/lib/x86_64-linux-gnu \
+        --libexecdir=/usr/lib/x86_64-linux-gnu \
+        --enable-shared \
+        --disable-examples  \
+        --disable-gtk-doc && \
+     make -j $(nproc) && \
+     make install DESTDIR=/home/build && \
+     make install
+
+# Build the gstremaer plugin ugly set
+ARG GST_PLUGIN_UGLY_REPO=https://gstreamer.freedesktop.org/src/gst-plugins-ugly/gst-plugins-ugly-${GST_VER}.tar.xz
+
+RUN  wget -O - ${GST_PLUGIN_UGLY_REPO} | tar xJ; \
+     cd gst-plugins-ugly-${GST_VER}; \
+     ./autogen.sh \
+        --prefix=/usr \
+        --libdir=/usr/lib/x86_64-linux-gnu \
+        --libexecdir=/usr/lib/x86_64-linux-gnu \
+        --enable-shared \
+        --disable-examples  \
+        --disable-gtk-doc && \
+     make -j $(nproc) && \
+     make install DESTDIR=/home/build && \
+     make install
+
+# Fetch gmmlib
+ARG GMMLIB_VER=intel-gmmlib-18.3.0
+ARG GMMLIB_REPO=https://github.com/intel/gmmlib/archive/${GMMLIB_VER}.tar.gz
+
+RUN wget -O - ${GMMLIB_REPO} | tar xz && mv gmmlib-${GMMLIB_VER} gmmlib;
+
+# Build libva
+ARG LIBVA_VER=2.4.0
+ARG LIBVA_REPO=https://github.com/intel/libva/archive/${LIBVA_VER}.tar.gz
+
+RUN apt-get -y remove libva*
+
+RUN DEBIAN_FRONTEND=noninteractive apt-get update && apt-get install -y -q --no-install-recommends libdrm-dev libx11-dev xorg-dev libgl1-mesa-dev openbox
+
+RUN wget -O - ${LIBVA_REPO} | tar xz && \
+    cd libva-${LIBVA_VER} && \
+    ./autogen.sh --prefix=/usr --libdir=/usr/lib/x86_64-linux-gnu && \
+    make -j8 && \
+    make install DESTDIR=/home/build && \
+    make install;
+
+# Build libva-utils
+ARG LIBVA_UTILS_VER=2.4.0
+ARG LIBVA_UTILS_REPO=https://github.com/intel/libva-utils/archive/${LIBVA_UTILS_VER}.tar.gz
+
+RUN wget -O - ${LIBVA_UTILS_REPO} | tar xz; \
+    cd libva-utils-${LIBVA_UTILS_VER}; \
+    ./autogen.sh --prefix=/usr --libdir=/usr/lib/x86_64-linux-gnu; \
+    make -j8; \
+    make install DESTDIR=/home/build; \
+    make install;
+
+# Build media driver
+ARG MEDIA_DRIVER_VER=intel-media-kbl-19.1.0
+ARG MEDIA_DRIVER_REPO=https://github.com/VCDP/media-driver/archive/${MEDIA_DRIVER_VER}.tar.gz
+
+RUN DEBIAN_FRONTEND=noninteractive apt-get update && apt-get install -y -q --no-install-recommends libdrm-dev libpciaccess-dev libx11-dev xorg-dev libgl1-mesa-dev
+
+RUN wget -O - ${MEDIA_DRIVER_REPO} | tar xz && mv media-driver-${MEDIA_DRIVER_VER} media-driver && \
+    mkdir -p media-driver/build && \
+    cd media-driver/build && \
+    cmake -DBUILD_TYPE=release -DBUILD_ALONG_WITH_CMRTLIB=1 -DMEDIA_VERSION="2.0.0" -DBS_DIR_GMMLIB=/home/gmmlib/Source/GmmLib -DBS_DIR_COMMON=/home/gmmlib/Source/Common -DBS_DIR_INC=/home/gmmlib/Source/inc -DBS_DIR_MEDIA=/home/media-driver -Wno-dev -DCMAKE_INSTALL_PREFIX=/usr .. && \
+    make -j8 && \
+    make install DESTDIR=/home/build && \
+    make install
+
+# Build Media SDK
+ARG MSDK_VER=MSS-KBL-2019-R1
+ARG MSDK_REPO=https://github.com/Intel-Media-SDK/MediaSDK/archive/${MSDK_VER}.tar.gz
+
+RUN wget -O - ${MSDK_REPO} | tar xz && mv MediaSDK-${MSDK_VER} MediaSDK && \
+    mkdir -p MediaSDK/build && \
+    cd MediaSDK/build && \
+    cmake -DCMAKE_INSTALL_PREFIX=/usr -DCMAKE_INSTALL_INCLUDEDIR=include/mfx -DBUILD_SAMPLES=OFF -DENABLE_OPENCL=OFF -Wno-dev .. && \
+    make -j8 && \
+    make install DESTDIR=/home/build && \
+    make install;
+
+# Build gst-libav
+ARG GST_PLUGIN_LIBAV_REPO=https://gstreamer.freedesktop.org/src/gst-libav/gst-libav-${GST_VER}.tar.xz
+
+RUN DEBIAN_FRONTEND=noninteractive apt-get update && apt-get install -y -q --no-install-recommends zlib1g-dev libssl-dev libbz2-dev liblzma-dev
+
+RUN wget -O - ${GST_PLUGIN_LIBAV_REPO} | tar xJ && \
+    cd gst-libav-${GST_VER} && \
+    ./autogen.sh \
+        --prefix="/usr" \
+        --libdir=/usr/lib/x86_64-linux-gnu \
+        --enable-shared \
+        --enable-gpl \
+        --disable-gtk-doc && \
+    make -j $(nproc) && \
+    make install DESTDIR=/home/build && \
+    make install
+
+# Build gstremaer plugin vaapi
+ARG GST_PLUGIN_VAAPI_REPO=https://gstreamer.freedesktop.org/src/gstreamer-vaapi/gstreamer-vaapi-${GST_VER}.tar.xz
+
+RUN  wget -O - ${GST_PLUGIN_VAAPI_REPO} | tar xJ && \
+    cd gstreamer-vaapi-${GST_VER} && \
+     ./autogen.sh \
+        --prefix=/usr \
+        --libdir=/usr/lib/x86_64-linux-gnu \
+        --libexecdir=/usr/lib/x86_64-linux-gnu \
+        --enable-shared \
+        --disable-examples \
+        --disable-gtk-doc  && \
+     make -j $(nproc) && \
+     make install DESTDIR=/home/build && \
+     make install
 
 #opencl drivers
 #clinfo needs to be installed after build directory is copied over
@@ -45,8 +243,6 @@ RUN git clone -b ${DLDT_VER} ${DLDT_REPO} && \
     cd dldt/inference-engine && \
     git submodule init && \
     git submodule update --recursive && \
-    sed -i 's/sudo -E //g' ./install_dependencies.sh && \
-    ./install_dependencies.sh && \
     pip3 install -r ie_bridges/python/requirements.txt && \
     mkdir build && \
     cd build && \
@@ -63,6 +259,7 @@ RUN mkdir -p build${libdir} && \
     cp -r dldt/inference-engine/bin/intel64/Release/lib/* build${libdir} && \
     mkdir -p build/opt/intel/dldt/inference-engine/external/ && \
     cp -r dldt/inference-engine/temp/* build/opt/intel/dldt/inference-engine/external/
+
 
 # target image
 FROM ubuntu:16.04
@@ -84,11 +281,14 @@ RUN update-alternatives --install /usr/bin/python3 python3 /usr/bin/python3.5 1 
     pip3 install --ignore-installed setuptools==39.1.0 -i  https://mirrors.aliyun.com/pypi/simple/
 
 RUN DEBIAN_FRONTEND=noninteractive apt-get update && apt-get install -y -q --no-install-recommends \
+libxv1 libxcb-shm0 libxcb-shape0 libxcb-xfixes0 libsdl2-2.0-0 libasound2 libvdpau1 libass5 libssl1.0.0 \
+libdrm-intel1 libx11-xcb1 libgl1-mesa-glx libxrandr2 libegl1-mesa \
+libvisual-0.4-0 libtheora0 libcdparanoia0 libsoup2.4-1 \
 libnuma1 libglib2.0 libpango-1.0-0 libpangocairo-1.0-0 gobject-introspection libudev1 \
 libpng12-0 libjpeg8 libjpeg-turbo8 \
-libgtk2.0 clinfo libdrm-dev \
-libusb-1.0-0-dev libboost-all-dev libjson-c-dev \
-ocl-icd-opencl-dev wget vim \
+libgtk2.0 clinfo libdrm2 \
+libusb-1.0-0 libboost-all-dev libjson-c2 python3-yaml python3-gst-1.0 \
+ocl-icd-libopencl1 wget vim \
     && rm -rf /var/lib/apt/lists/*
 
 # Install
@@ -103,4 +303,8 @@ RUN echo "\
 /opt/intel/dldt/inference-engine/external/mkltiny_lnx_20190131/lib\n\
 /opt/intel/dldt/inference-engine/external/vpu/hddl/lib" > /etc/ld.so.conf.d/opencv-dldt-gst.conf && ldconfig
 
-RUN pip3 install opencv-python
+RUN pip3 install opencv-python numpy cython
+
+ENV LIBVA_DRIVERS_PATH=/usr/lib/x86_64-linux-gnu/dri
+ENV LIBVA_DRIVER_NAME=iHD
+ENV GST_VAAPI_ALL_DRIVERS=1
