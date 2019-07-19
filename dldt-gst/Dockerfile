@@ -284,7 +284,7 @@ RUN DEBIAN_FRONTEND=noninteractive apt-get update && apt-get install -y -q --no-
 libxv1 libxcb-shm0 libxcb-shape0 libxcb-xfixes0 libsdl2-2.0-0 libasound2 libvdpau1 libass5 libssl1.0.0 \
 libdrm-intel1 libx11-xcb1 libgl1-mesa-glx libxrandr2 libegl1-mesa \
 libvisual-0.4-0 libtheora0 libcdparanoia0 libsoup2.4-1 \
-libnuma1 libglib2.0 libpango-1.0-0 libpangocairo-1.0-0 gobject-introspection libudev1 \
+libnuma1 libglib2.0 libpango-1.0-0 libpangocairo-1.0-0 gobject-introspection libgirepository1.0-dev libudev1 \
 libpng12-0 libjpeg8 libjpeg-turbo8 \
 libgtk2.0 clinfo libdrm2 \
 libusb-1.0-0 libboost-all-dev libjson-c2 python3-yaml python3-gst-1.0 \
@@ -304,6 +304,9 @@ RUN echo "\
 /opt/intel/dldt/inference-engine/external/vpu/hddl/lib" > /etc/ld.so.conf.d/opencv-dldt-gst.conf && ldconfig
 
 RUN pip3 install opencv-python numpy cython
+
+RUN ln -s /usr/lib/python3/dist-packages/gi/_gi.cpython-35m-x86_64-linux-gnu.so /usr/lib/python3/dist-packages/gi/_gi.cpython-36m-x86_64-linux-gnu.so \
+  && ln -s /usr/lib/python3/dist-packages/gi/overrides/_gi_gst.cpython-35m-x86_64-linux-gnu.so /usr/lib/python3/dist-packages/gi/overrides/_gi.cpython-36m-x86_64-linux-gnu.so
 
 ENV LIBVA_DRIVERS_PATH=/usr/lib/x86_64-linux-gnu/dri
 ENV LIBVA_DRIVER_NAME=iHD
