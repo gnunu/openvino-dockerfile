@@ -2,7 +2,37 @@ FROM ubuntu:16.04 AS build
 WORKDIR /home
 
 # COMMON BUILD TOOLS
-RUN DEBIAN_FRONTEND=noninteractive apt-get update && apt-get install -y -q --no-install-recommends build-essential autoconf make git wget curl pciutils cpio libtool lsb-release ca-certificates pkg-config bison flex libcurl4-gnutls-dev zlib1g-dev cmake automake yasm nasm
+RUN DEBIAN_FRONTEND=noninteractive apt-get update && apt-get install -y -q --no-install-recommends build-essential autoconf make git wget curl pciutils cpio libtool lsb-release ca-certificates pkg-config bison flex libcurl4-gnutls-dev zlib1g-dev automake
+
+# Install cmake
+ARG CMAKE_VER=3.13.1
+ARG CMAKE_REPO=https://cmake.org/files
+RUN wget -O - ${CMAKE_REPO}/v${CMAKE_VER%.*}/cmake-${CMAKE_VER}.tar.gz | tar xz && \
+    cd cmake-${CMAKE_VER} && \
+    ./bootstrap --prefix="/usr" && \
+    make -j8 && \
+    make install
+
+# Build NASM
+ARG NASM_VER=2.13.03
+ARG NASM_REPO=https://www.nasm.us/pub/nasm/releasebuilds/${NASM_VER}/nasm-${NASM_VER}.tar.bz2
+RUN  wget ${NASM_REPO} && \
+     tar -xaf nasm* && \
+     cd nasm-${NASM_VER} && \
+     ./autogen.sh && \
+     ./configure --prefix="/usr" --libdir=/usr/lib/x86_64-linux-gnu && \
+     make -j8 && \
+     make install
+
+# Build YASM
+ARG YASM_VER=1.3.0
+ARG YASM_REPO=https://www.tortall.net/projects/yasm/releases/yasm-${YASM_VER}.tar.gz
+RUN  wget -O - ${YASM_REPO} | tar xz && \
+     cd yasm-${YASM_VER} && \
+     sed -i "s/) ytasm.*/)/" Makefile.in && \
+     ./configure --prefix="/usr" --libdir=/usr/lib/x86_64-linux-gnu && \
+     make -j8 && \
+     make install
 
 # install python3.6
 RUN apt-get update && \
@@ -128,13 +158,13 @@ RUN  wget -O - ${GST_PLUGIN_UGLY_REPO} | tar xJ; \
      make install
 
 # Fetch gmmlib
-ARG GMMLIB_VER=intel-gmmlib-18.3.0
+ARG GMMLIB_VER=intel-gmmlib-19.2.1
 ARG GMMLIB_REPO=https://github.com/intel/gmmlib/archive/${GMMLIB_VER}.tar.gz
 
 RUN wget -O - ${GMMLIB_REPO} | tar xz && mv gmmlib-${GMMLIB_VER} gmmlib;
 
 # Build libva
-ARG LIBVA_VER=2.4.0
+ARG LIBVA_VER=2.5.0
 ARG LIBVA_REPO=https://github.com/intel/libva/archive/${LIBVA_VER}.tar.gz
 
 RUN apt-get -y remove libva*
@@ -149,7 +179,7 @@ RUN wget -O - ${LIBVA_REPO} | tar xz && \
     make install;
 
 # Build libva-utils
-ARG LIBVA_UTILS_VER=2.4.0
+ARG LIBVA_UTILS_VER=2.5.0
 ARG LIBVA_UTILS_REPO=https://github.com/intel/libva-utils/archive/${LIBVA_UTILS_VER}.tar.gz
 
 RUN wget -O - ${LIBVA_UTILS_REPO} | tar xz; \
@@ -160,8 +190,8 @@ RUN wget -O - ${LIBVA_UTILS_REPO} | tar xz; \
     make install;
 
 # Build media driver
-ARG MEDIA_DRIVER_VER=intel-media-kbl-19.1.0
-ARG MEDIA_DRIVER_REPO=https://github.com/VCDP/media-driver/archive/${MEDIA_DRIVER_VER}.tar.gz
+ARG MEDIA_DRIVER_VER=intel-media-19.2.0
+ARG MEDIA_DRIVER_REPO=https://github.com/intel/media-driver/archive/${MEDIA_DRIVER_VER}.tar.gz
 
 RUN DEBIAN_FRONTEND=noninteractive apt-get update && apt-get install -y -q --no-install-recommends libdrm-dev libpciaccess-dev libx11-dev xorg-dev libgl1-mesa-dev
 
@@ -174,7 +204,7 @@ RUN wget -O - ${MEDIA_DRIVER_REPO} | tar xz && mv media-driver-${MEDIA_DRIVER_VE
     make install
 
 # Build Media SDK
-ARG MSDK_VER=MSS-KBL-2019-R1
+ARG MSDK_VER=intel-mediasdk-19.2.0
 ARG MSDK_REPO=https://github.com/Intel-Media-SDK/MediaSDK/archive/${MSDK_VER}.tar.gz
 
 RUN wget -O - ${MSDK_REPO} | tar xz && mv MediaSDK-${MSDK_VER} MediaSDK && \
@@ -306,8 +336,9 @@ RUN echo "\
 RUN pip3 install opencv-python numpy cython
 
 RUN ln -s /usr/lib/python3/dist-packages/gi/_gi.cpython-35m-x86_64-linux-gnu.so /usr/lib/python3/dist-packages/gi/_gi.cpython-36m-x86_64-linux-gnu.so \
-  && ln -s /usr/lib/python3/dist-packages/gi/overrides/_gi_gst.cpython-35m-x86_64-linux-gnu.so /usr/lib/python3/dist-packages/gi/overrides/_gi.cpython-36m-x86_64-linux-gnu.so
+  && ln -s /usr/lib/python3/dist-packages/gi/overrides/_gi_gst.cpython-35m-x86_64-linux-gnu.so /usr/lib/python3/dist-packages/gi/overrides/_gi_gst.cpython-36m-x86_64-linux-gnu.so
 
 ENV LIBVA_DRIVERS_PATH=/usr/lib/x86_64-linux-gnu/dri
 ENV LIBVA_DRIVER_NAME=iHD
 ENV GST_VAAPI_ALL_DRIVERS=1
+ENV PYTHONPATH=/opt/intel/dldt/inference-engine/lib/intel64/python_api/python3.6
