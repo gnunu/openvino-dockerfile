@@ -1,0 +1,2 @@
+# docker build --file=./Dockerfile -t "vcac-a-ubuntu1604-openvino19r11-gst-va:latest" . $(env | grep -E '_(proxy|REPO|VER)=' | sed 's/^/--build-arg /') --build-arg USER=docker --build-arg GROUP=docker --build-arg UID=$(id -u) --build-arg GID=$(id -g)
+docker build --file=./Dockerfile -t "vcac-a-ubuntu1604-openvino19r11-gst-va:latest" . --build-arg http_proxy=http://10.239.4.80:913 --build-arg https_proxy=https://10.239.4.80:913 --build-arg USER=docker --build-arg GROUP=docker --build-arg UID=$(id -u) --build-arg GID=$(id -g)
