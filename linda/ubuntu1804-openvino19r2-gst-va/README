@@ -1,0 +1,21 @@
+1.Build docker image
+
+sudo docker build --file=./Dockerfile -t "ubuntu1804-openvino-gst-va:latest" . $(env | grep -E '_(proxy|REPO|VER)=' | sed 's/^/--build-arg /') --build-arg USER=docker --build-arg GROUP=docker --build-arg UID=$(id -u) --build-arg GID=$(id -g)
+
+2.run docker image
+
+sudo docker run -u root -v ~:/mnt --privileged --rm $(env | grep -E '_(proxy)=' | sed 's/^/-e /') --entrypoint bash -ti ubuntu1804-openvino-gst-va
+
+(It includes gstreamer-vaapi plugin in docker image, so please remove /usr/lib/x86_64-linux-gnu/gstreamer-1.0/libgstvaapi.so to avoid hardware codec involved.)
+
+3.setup env in docker
+
+source /opt/intel/openvino/bin/setupvars.sh
+
+4.run pipeline
+
+gst-launch-1.0 -v filesrc location=test.mp4 ! qtdemux ! decodebin ! videoconvert ! queue ! \
+
+  gvadetect inference-id=dtc model=model.xml device=CPU ! queue ! \
+
+  fpsdisplaysink video-sink=fakesink text-overlay=false signal-fps-measurements=true sync=false
