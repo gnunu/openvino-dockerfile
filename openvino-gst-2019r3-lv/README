@@ -1,0 +1,21 @@
+BUILD
+docker build --build-arg http_proxy=${HTTP_PROXY} --build-arg https_proxy=${HTTPS_PROXY} -t openvino-2019r3-lv .
+
+RUN with hddl
+$HDDL_INSTALL_DIR/hddldaemon
+docker run --device=/dev/ion:/dev/ion -v /var/tmp:/var/tmp -ti <image_name>
+or,
+docker run --privileged -v /var/tmp:/var/tmp -ti <image_name>
+
+misc:
+docker run -it --network=host --privileged openvino-2019r3-lv
+docker run -it --network=host -e DISPLAY=$DISPLAY -v $XAUTH:/root/.Xauthority -v $VIDEO_EXAMPLES_PATH:/root/video-examples --privileged <image tag>
+
+use X
+in docker, add:
+export DISPLAY=<host ip>:{0|1}
+for ex,
+export DISPLAY=10.238.135.69:1
+
+in host, run:
+xhost +
