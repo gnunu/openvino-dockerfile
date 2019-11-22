@@ -340,7 +340,7 @@ RUN echo "\
 /opt/intel/dldt/inference-engine/lib/intel64/\n\
 /opt/intel/dldt/inference-engine/external/tbb/lib\n\
 /opt/intel/dldt/inference-engine/external/mkltiny_lnx/lib\n\
-/opt/intel/dldt/inference-engine/external/vpu/hddl/lib\n\
+/opt/intel/dldt/inference-engine/external/hddl/lib\n\
 /opt/intel/dldt/inference-engine/external/opencv/lib/" > /etc/ld.so.conf.d/opencv-dldt-gst.conf && ldconfig
 
 ENV PKG_CONFIG_PATH=/usr/lib/x86_64-linux-gnu/pkgconfig:/opt/intel/mediasdk/lib64/pkgconfig:${PKG_CONFIG_PATH}
