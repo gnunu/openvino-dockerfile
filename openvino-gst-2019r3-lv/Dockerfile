@@ -167,7 +167,7 @@ RUN  mkdir gst-plugins-good-${GST_VER} && \
 
 ARG GST_PLUGIN_GOOD_REPO=https://gstreamer.freedesktop.org/src/gst-plugins-good/gst-plugins-good-${GST_VER}.tar.xz
 
-RUN  apt-get update && apt-get install -y -q --no-install-recommends libsoup2.4-dev libjpeg-dev
+RUN  apt-get update && apt-get install -y -q --no-install-recommends libsoup2.4-dev libjpeg-dev libssl1.0-dev
 
 RUN  wget -O - ${GST_PLUGIN_GOOD_REPO} | tar xJ && \
      cd gst-plugins-good-${GST_VER} && \
@@ -183,11 +183,16 @@ RUN  wget -O - ${GST_PLUGIN_GOOD_REPO} | tar xJ && \
      make install DESTDIR=/home/build && \
      make install
 
+# Build librtmp
+RUN git clone http://git.ffmpeg.org/rtmpdump && \
+    cd rtmpdump && \
+    sed -i 's#prefix=/usr/local#prefix=/usr#g' Makefile && \
+    make SYS=posix && \
+    make install DESTDIR=/home/build && \
+    make install
 
 # Build the gstreamer plugin bad set
 ARG GST_PLUGIN_BAD_REPO=https://gstreamer.freedesktop.org/src/gst-plugins-bad/gst-plugins-bad-${GST_VER}.tar.xz
-
-RUN  apt-get update && apt-get install -y -q --no-install-recommends libssl-dev
 
 RUN  wget -O - ${GST_PLUGIN_BAD_REPO} | tar xJ && \
      cd gst-plugins-bad-${GST_VER} && \
@@ -195,6 +200,7 @@ RUN  wget -O - ${GST_PLUGIN_BAD_REPO} | tar xJ && \
         --prefix=/usr \
         --libdir=/usr/lib/x86_64-linux-gnu \
         --libexecdir=/usr/lib/x86_64-linux-gnu \
+        --enable-rtmp \
         --enable-shared \
         --disable-examples  \
         --disable-gtk-doc && \
@@ -220,8 +226,6 @@ RUN  wget -O - ${GST_PLUGIN_UGLY_REPO} | tar xJ; \
 
 # Build gst-libav
 ARG GST_PLUGIN_LIBAV_REPO=https://gstreamer.freedesktop.org/src/gst-libav/gst-libav-${GST_VER}.tar.xz
-
-RUN DEBIAN_FRONTEND=noninteractive apt-get update && apt-get install -y -q --no-install-recommends libssl-dev
 
 RUN wget -O - ${GST_PLUGIN_LIBAV_REPO} | tar xJ && \
     cd gst-libav-${GST_VER} && \
@@ -252,6 +256,13 @@ RUN  wget -O - ${GST_PLUGIN_VAAPI_REPO} | tar xJ && \
      make -j $(nproc) && \
      make install DESTDIR=/home/build && \
      make install
+
+# Build gstreamer-media-SDK (gstreamer plugin mfx)
+RUN git clone https://github.com/intel/gstreamer-media-SDK/ && \
+    cd gstreamer-media-SDK && \
+    mkdir build && cd build && cmake .. && make && \
+    make install DESTDIR=/home/build && \
+    make install
 
 RUN apt-get install -y -q --no-install-recommends gtk-doc-tools
 
@@ -326,7 +337,7 @@ libnuma1 libass9 libssl1.0.0 libglib2.0 libpango-1.0-0 libpangocairo-1.0-0 gobje
 libpng16-16 libvisual-0.4-0 libtheora0 libcdparanoia0 libsoup2.4-1 libjpeg8 libjpeg-turbo8 python3 python3-pip python-yaml python3-cairo-dev \
 libgtk-3.0 clinfo libcairo2-dev \
 libusb-1.0-0-dev libboost-all-dev libjson-c-dev \
-build-essential cmake ocl-icd-opencl-dev wget gcovr vim git gdb ca-certificates libssl-dev uuid-dev \
+build-essential cmake ocl-icd-opencl-dev wget gcovr vim git gdb ca-certificates libssl1.0-dev uuid-dev \
 libgirepository1.0-dev \
     && rm -rf /var/lib/apt/lists/*
 
@@ -374,10 +385,10 @@ RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && \
 ARG LV_REPO=https://github.com/aliyun/aliyun-linkvisual-edge-linkai
 RUN  git clone ${LV_REPO} && \
      cd aliyun-linkvisual-edge-linkai && \
-     pip3 install setuptools wheel && \
-     pip3 install -r requirements.txt -i  https://mirrors.aliyun.com/pypi/simple/ && \
-     mkdir logs && \
-     python3 setup.py develop
+     pip3 install setuptools wheel -i  https://mirrors.aliyun.com/pypi/simple/ && \
+     pip3 install -r requirements.txt -i  https://mirrors.aliyun.com/pypi/simple/
+#     mkdir logs && \
+#     python3 setup.py develop
 
 ENV OPENVINO_PLUGIN_DIR /opt/intel/dldt/inference-engine/lib/intel64/
 
