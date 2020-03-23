@@ -30,7 +30,7 @@ RUN  git clone ${X264_REPO} && \
 RUN DEBIAN_FRONTEND=noninteractive apt-get update && apt-get install -y -q --no-install-recommends libx11-dev xorg-dev libgl1-mesa-dev openbox
 
 # Build Intel(R) Media SDK
-ARG MSDK_REPO=https://github.com/Intel-Media-SDK/MediaSDK/releases/download/intel-mediasdk-19.1.0/MediaStack.tar.gz
+ARG MSDK_REPO=https://github.com/Intel-Media-SDK/MediaSDK/releases/download/intel-mediasdk-19.4.0/MediaStack.tar.gz
 
 RUN wget -O - ${MSDK_REPO} | tar xz && \
     cd MediaStack && \
@@ -258,8 +258,9 @@ RUN  wget -O - ${GST_PLUGIN_VAAPI_REPO} | tar xJ && \
      make install
 
 # Build gstreamer-media-SDK (gstreamer plugin mfx)
+COPY ./patches/gstreamer-media-SDK /patches/gstreamer-media-SDK
 RUN git clone https://github.com/intel/gstreamer-media-SDK/ && \
-    cd gstreamer-media-SDK && \
+    cd gstreamer-media-SDK && git apply /patches/gstreamer-media-SDK/mfx.patch && \
     mkdir build && cd build && cmake .. && make && \
     make install DESTDIR=/home/build && \
     make install
@@ -392,4 +393,5 @@ RUN  git clone ${LV_REPO} && \
 
 ENV OPENVINO_PLUGIN_DIR /opt/intel/dldt/inference-engine/lib/intel64/
 
+COPY ./iHD_drv_video.so /opt/intel/mediasdk/lib64/iHD_drv_video.so
 # linkai -l
