@@ -253,6 +253,7 @@ RUN  wget -O - ${GST_PLUGIN_VAAPI_REPO} | tar xJ && \
         --enable-shared \
         --disable-examples \
         --disable-gtk-doc  && \
+     sed -i 's#define USE_GST_GL_HELPERS 1#undef USE_GST_GL_HELPERS#g' config.h && \
      make -j $(nproc) && \
      make install DESTDIR=/home/build && \
      make install
@@ -395,3 +396,27 @@ ENV OPENVINO_PLUGIN_DIR /opt/intel/dldt/inference-engine/lib/intel64/
 
 COPY ./iHD_drv_video.so /opt/intel/mediasdk/lib64/iHD_drv_video.so
 # linkai -l
+
+# add gst-video-analytics
+ARG GIT_INFO
+ARG SOURCE_REV
+ARG ENABLE_PAHO_INSTALLATION=false
+ARG ENABLE_RDKAFKA_INSTALLATION=false
+
+RUN git clone https://github.com/opencv/gst-video-analytics.git -b v0.6.1 && \
+    mkdir -p gst-video-analytics/build \
+    && cd gst-video-analytics/build \
+    && cmake \
+    -DCMAKE_INSTALL_PREFIX=/usr \
+    -DVERSION_PATCH=${SOURCE_REV} \
+    -DGIT_INFO=${GIT_INFO} \
+    -DBUILD_SHARED_LIBS=ON \
+    -DENABLE_PAHO_INSTALLATION=${ENABLE_PAHO_INSTALLATION} \
+    -DENABLE_RDKAFKA_INSTALLATION=${ENABLE_RDKAFKA_INSTALLATION} \
+    -DHAVE_VAAPI=ON \
+    .. \
+    && make -j $(nproc) \
+    && make install \
+    && echo "/usr/lib/gst-video-analytics" >> /etc/ld.so.conf.d/opencv-dldt-gst.conf && ldconfig
+ENV GST_PLUGIN_PATH=/usr/lib/gst-video-analytics/
+
