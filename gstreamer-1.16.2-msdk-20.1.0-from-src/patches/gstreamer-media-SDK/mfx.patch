@@ -1,0 +1,28 @@
+diff --git a/cmake/FindSinkDependencies.cmake b/cmake/FindSinkDependencies.cmake
+index b909ba8..bc7adfc 100644
+--- a/cmake/FindSinkDependencies.cmake
++++ b/cmake/FindSinkDependencies.cmake
+@@ -17,17 +17,17 @@ function(FindWayland libs)
+ endfunction(FindWayland)
+ 
+ function(FindX11 libs)
+-  pkg_check_modules(XCBDRI3 xcb-dri3)
++    #  pkg_check_modules(XCBDRI3 xcb-dri3)
+   pkg_check_modules(XCBPRESENT xcb-present)
+   pkg_check_modules(X11    REQUIRED x11)
+   pkg_check_modules(XKB    xkbcommon)
+   pkg_check_modules(XRANDR xrandr)
+   pkg_check_modules(XRENDER xrender)
+-  if(XCBDRI3_FOUND)
+-	  set(${libs} ${${libs}} ${XCBDRI3_LIBRARIES} PARENT_SCOPE)
+-	  include_directories (${XCBDRI3_INCLUDE_DIRS})
+-      add_definitions(-DHAVE_XCBDRI3)
+-  endif()
++  #if(XCBDRI3_FOUND)
++  #	  set(${libs} ${${libs}} ${XCBDRI3_LIBRARIES} PARENT_SCOPE)
++  #	  include_directories (${XCBDRI3_INCLUDE_DIRS})
++  #    add_definitions(-DHAVE_XCBDRI3)
++  #endif()
+ 
+   if(XCBPRESENT_FOUND)
+ 	  set(${libs} ${${libs}} ${XCBPRESENT_LIBRARIES} PARENT_SCOPE)
