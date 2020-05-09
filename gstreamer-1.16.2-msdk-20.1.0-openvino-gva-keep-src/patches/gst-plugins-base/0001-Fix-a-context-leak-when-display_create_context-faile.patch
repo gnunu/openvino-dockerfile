@@ -1,0 +1,27 @@
+From c046b8641a3512f0e29670878ce85316de1ab669 Mon Sep 17 00:00:00 2001
+From: Shaoqiang <shaoqiang.chen@intel.com>
+Date: Thu, 9 Apr 2020 01:01:13 +0800
+Subject: [PATCH] Fix a context leak when display_create_context failed
+
+---
+ gst-libs/gst/gl/gstgldisplay.c | 4 ++++
+ 1 file changed, 4 insertions(+)
+
+diff --git a/gst-libs/gst/gl/gstgldisplay.c b/gst-libs/gst/gl/gstgldisplay.c
+index 3b72a56..066a939 100644
+--- a/gst-libs/gst/gl/gstgldisplay.c
++++ b/gst-libs/gst/gl/gstgldisplay.c
+@@ -533,6 +533,10 @@ gst_gl_display_create_context (GstGLDisplay * display,
+ 
+   if (ret)
+     *p_context = context;
++  else {
++    gst_object_unref (context);
++    printf("############# HERE ##################\n");
++  }
+ 
+   return ret;
+ }
+-- 
+2.7.4
+
