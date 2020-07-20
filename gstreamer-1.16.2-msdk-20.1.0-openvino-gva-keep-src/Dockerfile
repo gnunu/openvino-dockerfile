@@ -250,7 +250,7 @@ RUN  wget -O - ${GST_PLUGIN_VAAPI_REPO} | tar xJ && \
 #    make install DESTDIR=/home/build && \
 #    make install
 
-RUN apt-get install -y -q --no-install-recommends gtk-doc-tools
+RUN apt-get install -y -q --no-install-recommends gtk-doc-tools python-gi-dev
 
 RUN pip3 install setuptools wheel
 RUN pip3 install PyGObject numpy
