@@ -1,0 +1,5 @@
+to run:
+docker run --privileged --device-cgroup-rule='c 189:* rmw' --device-cgroup-rule='c 180:* rmw' --rm --net=host --cap-add=sys_admin -v /dev:/dev -v /var/tmp:/var/tmp -i -t openvino-3.376-hddldaemon /bin/bash
+
+this also works, by adding all CAPs:
+docker run --rm --privileged --net=host --cap-add=ALL -v /dev:/dev -v /var/tmp:/var/tmp -i -t openvino-3.376-hddldaemon /bin/bash
