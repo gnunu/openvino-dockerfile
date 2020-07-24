@@ -48,6 +48,7 @@ RUN source /opt/intel/openvino/bin/setupvars.sh && \
     cd /opt/intel/openvino/inference_engine/external/hddl && \
     sed -i 's#lsmod#echo myd_ion myd_vsc#g' install_IVAD_VPU_dependencies.sh && \
     sed -i 's#Please reboot#Have fun!#g' install_IVAD_VPU_dependencies.sh && \
+    sed -i 's#setup.sh install$#setup.sh install USE_SYSTEM_CONFIG_HEAP#g' install_IVAD_VPU_dependencies.sh && \
     ./install_IVAD_VPU_dependencies.sh
 
 COPY start_hddl.sh /root/start_hddl.sh
