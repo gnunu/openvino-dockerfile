@@ -1,0 +1,4 @@
+This docker image would deal with hddl suite deployment and hddldaemon running.
+
+to run:
+docker run --rm --privileged --net=host --cap-add=ALL -v /dev:/dev -v /var/tmp:/var/tmp -i -t openvino-3.376-hddldaemon-centos /bin/bash
